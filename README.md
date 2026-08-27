@@ -38,7 +38,7 @@ Execute [`database/oracle/schema.sql`](database/oracle/schema.sql) no schema da 
 Exemplo de instalação do driver e datasource via WildFly CLI (ajuste os caminhos e credenciais):
 
 ```bash
-module add --name=com.oracle.ojdbc --resources=/caminho/ojdbc8.jar --dependencies=jakarta.api,jakarta.transaction.api
+module add --name=com.oracle.ojdbc --resources=/caminho/ojdbc8.jar --dependencies=javax.api,javax.transaction.api
 /subsystem=datasources/jdbc-driver=oracle:add(driver-name=oracle,driver-module-name=com.oracle.ojdbc,driver-class-name=oracle.jdbc.OracleDriver)
 data-source add --name=PatientRegistryDS --jndi-name=java:jboss/datasources/PatientRegistryDS --driver-name=oracle --connection-url=jdbc:oracle:thin:@localhost:1521/XEPDB1 --user-name=patient_registry --password=patient_registry --enabled=true
 ```

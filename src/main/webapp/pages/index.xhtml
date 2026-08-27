@@ -1,15 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="jakarta.faces.facelets" xmlns:h="jakarta.faces.html" xmlns:f="jakarta.faces.core" xmlns:p="http://primefaces.org/ui" template="/templates/template-sistema.xhtml">
-<ui:define name="content"><h:form id="patientForm"><p:growl id="messages" showDetail="true" life="5000"/>
-<section class="hero"><span class="eyebrow">GESTÃO CLÍNICA</span><h1>Cadastro de pacientes</h1><p>Informações organizadas e idade calculada diretamente pelo banco de dados.</p></section>
-<p:card styleClass="form-card"><f:facet name="title">Novo paciente</f:facet><p:panelGrid columns="3" layout="grid" styleClass="ui-fluid form-grid" columnClasses="col-12 md:col-5,col-12 md:col-4,col-12 md:col-3">
-<p:outputPanel><p:outputLabel for="fullName" value="Nome completo"/><p:inputText id="fullName" value="#{patientBean.patient.fullName}" required="true" maxlength="120" placeholder="Ex.: Maria da Silva"/><p:message for="fullName"/></p:outputPanel>
-<p:outputPanel><p:outputLabel for="birthDate" value="Data de nascimento"/><p:datePicker id="birthDate" value="#{patientBean.patient.dateOfBirth}" pattern="dd/MM/yyyy" yearNavigator="true" monthNavigator="true" required="true" showIcon="true"/><p:message for="birthDate"/></p:outputPanel>
-<p:commandButton value="Adicionar paciente" icon="pi pi-plus" action="#{patientBean.save}" process="@form" update="@form" styleClass="save-button"/></p:panelGrid></p:card>
-<p:card styleClass="table-card"><p:dataTable id="patients" value="#{patientBean.patients}" var="item" paginator="true" rows="8" emptyMessage="Nenhum paciente cadastrado." reflow="true" editMode="row" rowKey="#{item.id}" paginatorPosition="bottom">
-<f:facet name="header"><div class="table-title"><span>Pacientes cadastrados</span><span class="record-count">#{patientBean.patients.size()} registros</span></div></f:facet><p:ajax event="rowEdit" listener="#{patientBean.onRowEdit}" update="patients messages"/>
-<p:column headerText="Código" styleClass="id-column"><h:outputText value="#{item.id}"/></p:column>
-<p:column headerText="Nome" sortBy="#{item.fullName}" filterBy="#{item.fullName}"><p:cellEditor><f:facet name="output"><h:outputText value="#{item.fullName}"/></f:facet><f:facet name="input"><p:inputText value="#{item.fullName}" required="true" maxlength="120"/></f:facet></p:cellEditor></p:column>
-<p:column headerText="Nascimento" sortBy="#{item.dateOfBirth}"><p:cellEditor><f:facet name="output"><h:outputText value="#{item.dateOfBirth}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></f:facet><f:facet name="input"><p:datePicker value="#{item.dateOfBirth}" pattern="dd/MM/yyyy" required="true"/></f:facet></p:cellEditor></p:column>
-<p:column headerText="Ações" exportable="false" styleClass="actions-column"><p:rowEditor/><p:commandButton icon="pi pi-calculator" title="Calcular idade" action="#{patientBean.calculateAge(item)}" process="@this" update="messages" styleClass="rounded-button ui-button-outlined"/><p:commandButton icon="pi pi-trash" title="Excluir" action="#{patientBean.delete(item)}" process="@this" update="@form" styleClass="rounded-button ui-button-danger ui-button-outlined"><p:confirm header="Confirmar exclusão" message="Excluir #{item.fullName}?" icon="pi pi-exclamation-triangle"/></p:commandButton></p:column>
-</p:dataTable></p:card><p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true"><p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/><p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes ui-button-danger"/></p:confirmDialog></h:form></ui:define></ui:composition>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui"
+                template="/templates/template-sistema.xhtml">
+  <ui:define name="content">
+    <p:growl id="messages" showDetail="true" life="5000"/>
+
+    <section class="hero">
+      <span class="eyebrow">GESTÃO CLÍNICA</span>
+      <h1>Cadastro de pacientes</h1>
+      <p>Informações organizadas e idade calculada diretamente pelo banco de dados.</p>
+    </section>
+
+    <h:form id="registrationForm">
+      <p:card styleClass="form-card">
+        <f:facet name="title">Novo paciente</f:facet>
+        <p:panelGrid columns="3" layout="grid" styleClass="ui-fluid form-grid"
+                     columnClasses="col-12 md:col-5,col-12 md:col-4,col-12 md:col-3">
+          <p:outputPanel>
+            <p:outputLabel for="fullName" value="Nome completo"/>
+            <p:inputText id="fullName" value="#{patientBean.patient.fullName}" required="true"
+                         maxlength="120" placeholder="Ex.: Maria da Silva"/>
+            <p:message for="fullName"/>
+          </p:outputPanel>
+          <p:outputPanel>
+            <p:outputLabel for="birthDate" value="Data de nascimento"/>
+            <p:datePicker id="birthDate" value="#{patientBean.patient.dateOfBirth}" pattern="dd/MM/yyyy"
+                          yearNavigator="true" monthNavigator="true" required="true" showIcon="true"/>
+            <p:message for="birthDate"/>
+          </p:outputPanel>
+          <p:commandButton value="Adicionar paciente" icon="pi pi-plus" action="#{patientBean.save}"
+                           ajax="false" styleClass="save-button"/>
+        </p:panelGrid>
+      </p:card>
+    </h:form>
+
+    <h:form id="patientsForm">
+      <p:card styleClass="table-card">
+        <p:dataTable id="patients" value="#{patientBean.patients}" var="item" paginator="true" rows="8"
+                     emptyMessage="Nenhum paciente cadastrado." reflow="true" rowKey="#{item.id}"
+                     paginatorPosition="bottom" editable="true" editMode="row">
+          <f:facet name="header">
+            <div class="table-title"><span>Pacientes cadastrados</span><span class="record-count">#{patientBean.patients.size()} registros</span></div>
+          </f:facet>
+          <p:column headerText="Código" styleClass="id-column">
+            <h:outputText value="#{item.id}"/>
+          </p:column>
+          <p:column headerText="Nome" sortBy="#{item.fullName}" filterBy="#{item.fullName}">
+            <p:cellEditor>
+              <f:facet name="output"><h:outputText value="#{item.fullName}"/></f:facet>
+              <f:facet name="input"><p:inputText value="#{item.fullName}" required="true" maxlength="120"/></f:facet>
+            </p:cellEditor>
+          </p:column>
+          <p:column headerText="Nascimento" sortBy="#{item.dateOfBirth}">
+            <p:cellEditor>
+              <f:facet name="output"><h:outputText value="#{item.dateOfBirth}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></f:facet>
+              <f:facet name="input"><p:datePicker value="#{item.dateOfBirth}" pattern="dd/MM/yyyy" required="true"/></f:facet>
+            </p:cellEditor>
+          </p:column>
+          <p:column headerText="Ações" exportable="false" styleClass="actions-column">
+            <p:rowEditor editTitle="Editar" saveTitle="Salvar" cancelTitle="Cancelar"/>
+            <p:commandButton icon="pi pi-calculator" title="Calcular idade"
+                             action="#{patientBean.calculateAge(item)}" process="@this" update=":messages"
+                             styleClass="rounded-button ui-button-outlined"/>
+            <p:commandButton icon="pi pi-trash" title="Excluir" action="#{patientBean.delete(item)}"
+                             process="@this" update="patients :messages"
+                             styleClass="rounded-button ui-button-danger ui-button-outlined">
+              <p:confirm header="Confirmar exclusão" message="Excluir #{item.fullName}?"
+                         icon="pi pi-exclamation-triangle"/>
+            </p:commandButton>
+          </p:column>
+          <p:ajax event="rowEdit" listener="#{patientBean.onRowEdit}" update="patients :messages"/>
+        </p:dataTable>
+      </p:card>
+      <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true">
+        <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/>
+        <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes ui-button-danger"/>
+      </p:confirmDialog>
+    </h:form>
+  </ui:define>
+</ui:composition>
